@@ -1,0 +1,87 @@
+#!/bin/sh
+
+main()
+{
+    local async=false
+    local input=false
+    local quiet=false
+    local timeout=1
+    local wait_=30
+    local pid=
+
+    while getopts ":aiqp:t:w:" _o; do
+        case "${_o}" in
+            a)
+                async=true
+                ;;
+            i)
+                input=true
+                ;;
+            q)
+                quiet=true
+                ;;
+            v)
+                exec qga-guest-exec -v
+                exit $?
+                ;;
+            p)
+                pid="${OPTARG}"
+                ;;
+            t)
+                timeout="${OPTARG}"
+                ;;
+            w)
+                wait_="${OPTARG}"
+                ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    local short_flags=
+
+    if ${async}; then
+        short_flags="-a"
+    fi
+
+    if ${input}; then
+        short_flags="${short_flags} -i"
+    fi
+
+    if ${quiet}; then
+        short_flags="${short_flags} -q"
+    fi
+
+    local socket
+    socket=`get_socket_path` || exit 1
+
+    if [ -z "${pid}" ]; then
+        exec qga-guest-exec ${short_flags} -t "${timeout}" -w "${wait_}" "${socket}" "$@"
+        exit $?
+    else
+        exec qga-guest-exec ${short_flags} -t "${timeout}" -w "${wait_}" -p "${pid}" "${socket}"
+        exit $?
+    fi
+}
+
+get_socket_path() {
+  local name
+  name=`vm list 2>/dev/null | awk '$1 != "NAME" && NF > 0 {print $1; exit}'`
+  [ -n "$name" ] || return 1
+  printf '/vm/%s/vtcon.org.qemu.guest_agent.0' "$name"
+}
+
+usage()
+{
+    cat << EOF
+usage: vm-exec [-iq] [-t <timeout>] [-w <wait>] <program> [<args> ...]
+       vm-exec [-iq] [-t <timeout>] -a <program> [<args> ...]
+       vm-exec [-t <timeout>] [-w <wait>] -p <pid>
+       vm-exec -v
+EOF
+}
+
+main "$@"
