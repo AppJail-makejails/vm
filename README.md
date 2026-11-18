@@ -1,6 +1,6 @@
 # vm
 
-Makejail for creating virtual machines using vm-bhyve.
+A Makejail for creating and managing full virtual machines on FreeBSD with vm-bhyve. It sets up the jail environment, configures VM networking (including a Tor-routed variant), and supports running commands inside the guest.
 
 github.com/FreeBSD/vm-bhyve
 
@@ -231,7 +231,7 @@ Unlike the first example, the `is_public_vm`, `exclude_ports`, and `pf_stricter`
 
 ### Running commands on the guest using vm-exec
 
-If you have configured `virt_console0: ‘org.qemu.guest_agent.0’`, you can use `vm-exec` to run commands, provided that the QEMU guest agent is installed on the guest system. `vm-exec` is simply a wrapper around [`qga-guest-exec`](https://github.com/DtxdF/qga-guest-exec) that always configures the socket to point to the first (and therefore only) virtual machine within the jail.
+If you have configured `virt_console0: ‘org.qemu.guest_agent.0’`, you can use `vm-exec` to run commands, provided that the QEMU guest agent is installed on the guest system. `vm-exec` is simply a wrapper around `qga-guest-exec` that always configures the socket to point to the first (and therefore only) virtual machine within the jail.
 
 ```console
 $ appjail cmd jexec windows10 vm list
